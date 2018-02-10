@@ -12,7 +12,7 @@ Installed locally live-server `yarn add live-server` and it createda node_module
 
 Created a gitignore file `touch .gitignore` with node modules inside.
 
-Checked live-server was installed correctly `live-server -v`. it doesn't work because the path is not right. Let's create a script inside of package.json.
+Checked live-server was installed correctly `live-server -v`. It doesn't work because the path is not right. Let's create a script inside of package.json.
 
 ```json
 {
@@ -27,3 +27,21 @@ Checked live-server was installed correctly `live-server -v`. it doesn't work be
 ```
 
 Can now use `yarn run serve` in terminal and it opens the app !
+
+# Install react
+
+Let's install React using a script tag and taking it from a CDN.
+
+We need react and react-DOM (companion to render in the browser... not react for VR!) so let's add it in the body:
+```html
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+```
+
+We now need a file to boot our JS code. let's create `/scripts/app.js`.
+Let's not forget to reference it in the body below our calls for react scripts
+```html
+<script src="/scripts/app.js"></script>
+```
+
+in the browser we can now check `React` and `ReactDOM` variables are available from the console.
