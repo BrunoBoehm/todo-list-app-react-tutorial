@@ -99,3 +99,47 @@ var template = (
 );
 ```
 Note how we can use () to format code nicely.
+
+# Installing Webpack
+
+Webpack is going to create one single "bundle" javascript file that will contain all dependencies and application code. There will just be one single script tag in our HTML, and our website will be able to make on single request - much faster!
+
+Now with webpack we're not relying on the global javascript namespace, having to require the scripts one after the other in the correct order. Our app will be structures with the following folders:
+- public/ for serving assets (index.html and our bundle.js made by Webpack)
+- src/ for our client-side javascript (app.js and all of our javascript files)
+- node_modules/ for third-party dependencies (react.js react-dom.js ...)
+
+We're not just concatenating and minifying the multiple javascript files like Gulp or Grunt, instead we can create a multitude of javascript files that can communicate with `import` and `export` ES6 syntax.
+
+We will also be able to import third-party dependencies (that live in the npm_modules folder) in each of these files, from yarn and npm.
+
+In the terminal we can `yarn add webpack` it will install the dependencies into node_modules, and we can now access it via scripts in our package.json and create a build command for running webpack. The scripts run by the webpack command will be defined next and it's going to be much more manageable than having everything into our package.json scripts.
+
+```json
+{
+  "scripts": {
+    "serve": "live-server public/",
+    "build": "webpack",
+    "build-babel": "babel src/app.js --out-file=public/scripts/app.js --presets=env,react --watch"
+  },
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "live-server": "^1.2.0",
+    "webpack": "^3.11.0"
+  }
+}
+```
+Note we renamed our babel script, we're not actually going to need it anymore as webpack will be in charge of running Babel.
+
+Let's create a configuration file for our webpack command: `webpack.config.js` in the root of our folder. This is actually a node script. In there, we create a module export with an object that will be made available to webpack, containing an input (where to take the file to process) and output (where to put the bundled version).
+
+
+Note the `output` takes a path relative to our machine for the public folder of our app. We can use `__direname` to print the name of our current location. We'll use node `path.join()` javascript method to make sure the paths can be concatenated neatly. 
+
+Making sure we comment out any JSX code (we don't have the babel setup yet in our webpack config), we can run `yarn run build` and voila: a now have a `bundle.js` file in our public folder.
+
+We can remove our scripts folder, and also reference our single javascript file in out index.html with `<script src ="/bundle.js"></script>` (note the root of the webserver is `public/`).
+
+Now we can restart our server with `yarn run serve` and check our app is working with this minimal webmack setup!
