@@ -70,7 +70,7 @@ We can also install our 2 presets with `yarn add babel-preset-react babel-preset
 
 And at last, we can add a new script to run babel from a source folder (create `src` in the root, and inside duplicate the old app.js containing the JSX) and output the compiled version in our public/scripts one. 
 
-The package.json should look like this:
+The package.json should look like this (note we could run `yarn install` to reinstall all of our node_modules:
 ```json
 {
   "scripts": {
@@ -87,3 +87,15 @@ The package.json should look like this:
 ```
 
 Now we can start our `yarn run build` and in another window `yarn run serve`... and it should all work out.
+
+Now we can have fun writing JSX, for instance
+```js
+var appName = "Todo List"
+var template = (
+    <div>
+        <h1>{appName.toUpperCase()} App</h1>
+        <p>Hello World, welcome to the app!</p>
+    </div>
+);
+```
+Note how we can use () to format code nicely.
