@@ -143,3 +143,62 @@ Making sure we comment out any JSX code (we don't have the babel setup yet in ou
 We can remove our scripts folder, and also reference our single javascript file in out index.html with `<script src ="/bundle.js"></script>` (note the root of the webserver is `public/`).
 
 Now we can restart our server with `yarn run serve` and check our app is working with this minimal webmack setup!
+
+## Adding Babel
+
+We'll use a loader for Babel. We will use `babel-core` (`babel-cli` was for using Babel inside the CLI). Let's `yarn add babel-core` and also add `yarn add babel-loader` (a webpack plugin to teach webpack how to treat certain files and use Babel on them).
+
+In our webpack file, we can create a [module](https://webpack.js.org/concepts/loaders/) for our loader, and use regular expression to ask it to process all files finishing with .js except those in node_modules (already ready for production).
+
+```js
+const path = require('path');
+
+module.exports = {
+    entry: './src/app.js',
+    output: {
+        path: path.join(__dirname, 'public'),
+        filename: 'bundle.js'
+    },
+    module: {
+        rules: [{
+            loader: 'babel-loader',
+            test: /\.js$/,
+            exclude: /node_modules/
+        }]
+    }
+}
+```
+
+And now we need to configure babel with our presets, we'll create a `.babelrc` json file containing the reference to the env and react presets we need.
+```json
+{
+  "presets": [
+    "env",
+    "react"
+  ]
+}
+```
+
+Let's now work on our app.js and import React and ReactDOM.
+We can `yarn add react react-dom` in the terminal and then update our app.js file to import both npm modules
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+console.log('App.js is running!!');
+
+const appName = "Todo List"
+const template = (
+    <div>
+        <h1>{appName.toUpperCase()} App</h1>
+        <p>Hello World, welcome to the app!</p>
+    </div>
+);
+
+const appRoot = document.getElementById('app');
+
+ReactDOM.render(template, appRoot);
+```
+
+We can now uncomment our JSX code, `yarn run build`, `yarn run serve` and check out our browser ... yay, all systems operational!
