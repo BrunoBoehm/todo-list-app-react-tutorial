@@ -970,6 +970,7 @@ var template = _react2.default.createElement(
 );
 
 var appRoot = document.getElementById('app');
+_reactDom2.default.render(template, appRoot);
 
 /***/ }),
 /* 15 */
