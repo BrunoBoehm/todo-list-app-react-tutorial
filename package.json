@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "serve": "live-server public/"
+  },
+  "dependencies": {
+    "live-server": "^1.2.0"
+  }
+}
