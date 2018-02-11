@@ -542,3 +542,44 @@ We can add a styling for `.is-active` in our `_base.scss`
 }
 ```
 Now we've hijacked the browser way to handle links and we don't rely on the server anymore.
+
+## Cleaning the routes
+We can now clean this a little by putting our router to its specific file, and other pages components too.
+
+In our `src/` folder we can create a new folder `src/routers/` containing a component file called `AppRouter.js`.
+```js
+import React from 'react';
+import { BrowserRouter, Route, Switch, Link, NavLink } from 'react-router-dom';
+
+const AppRouter = () => (
+    <BrowserRouter>
+        <div>
+            <Header />
+            <Switch>
+                <Route path="/" component={App} exact={true} />
+                <Route path="/contact" component={ContactPage} />
+                <Route component={NotFoundPage} />
+            </Switch>
+        </div>
+    </BrowserRouter>
+);
+
+export default AppRouter;
+```
+Note how we use ES6 implicit function return.
+
+We can also organize our pages components into a `src/pages/` folder to separate pages templates from componenets. Let's not forget to import and export all elements needed byt the pages. For example the Header component looks like
+```js
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+
+const Header = () => (
+    <header>
+      <h1>Nav App Title</h1>
+      <NavLink to="/" activeClassName="is-active" exact={true}>Homepage</NavLink>
+      <NavLink to="/contact" activeClassName="is-active" >Contact</NavLink>
+    </header>
+);
+
+export default Header;
+```
