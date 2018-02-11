@@ -456,3 +456,36 @@ const Component = (props) => {
 };
 export default Component;
 ```
+
+# React Router
+
+Let's install `yarn add react-router-dom` (more specific to building a web app than the general `react-router`).
+
+Let's import named exports from react-dom by adding the import to our opening app.js root file.
+```js
+import { BrowserRouter, Route } from 'react-router-dom';
+```
+`BrowserRouter` will be used once to create our router, and `Route` will be used to create each of our routes.
+
+We can now create our router and routes. Note `<BrowserRouter>` takes one single `<div>` containing all routes. We can just make sure to have our components imported and actually defined.
+
+```js
+const routes = (
+  <BrowserRouter>
+    <div>
+      <Route path="/" component={HomePage} exact={true} />
+      <Route path="/contact" component={ContactPage}/>
+    </div>
+  </BrowserRouter>
+);
+```
+Note we have a 404 default page.
+
+Now if we access the /contact page we wouldn't be able to access it and would be welcomed by a `Cannot GET /contact`. We need to tell our dev-server that the routing will be handled on the client side, and that it can return the index.html for any page, that will load the bundle.js and then the router will render /create. For this we can add in our webpack devServer config:
+```js
+    devServer: {
+        contentBase: path.join(__dirname, 'public'),
+        historyApiFallback: true
+    }
+```
+We need to restart the dev-server for this to work. We will change that later on for production.
