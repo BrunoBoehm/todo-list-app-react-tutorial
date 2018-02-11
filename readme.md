@@ -489,3 +489,22 @@ Now if we access the /contact page we wouldn't be able to access it and would be
     }
 ```
 We need to restart the dev-server for this to work. We will change that later on for production.
+
+## 404
+We can improve this with a 404 page, by using the <Switch> component, that will go and stop when it finds a match. We won't see the 404 if there's a match before.
+```js
+const routes = (
+  <BrowserRouter>
+    <Switch>
+      <Route path="/" component={HomePage} exact={true} />
+      <Route path="/contact" component={ContactPage}/>
+      <Route component={NotFoundPage} />
+    </Switch>
+  </BrowserRouter>
+);
+```
+
+Let's not forget to add switch to our import
+```js
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+```
