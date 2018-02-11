@@ -277,3 +277,39 @@ module.exports = {
 We can now import our style.css file into our app.js src file with `import './styles/styles.css';`.
 
 Now when we'll `yarn run build` it will add our CSS.
+
+## Improving with SCSS
+We need a loader for SCSS to process `.scss files` into regular CSS.
+
+Let's update our test to look for SCSS files: `test: /\.scss$/`, and write some SCSS code to test it our in style.scss (rename the file)
+
+```scss
+$main-color: red;
+
+* {
+    color: $main-color;
+}
+```
+
+We need to modify our import statement `import './styles/styles.scss';`.
+
+We need to install `yarn add sass-loader` (to enable us to import the sass files) and `yarn add node-sass` (converts scss to css). We just then need to add our `sass-loader` to our `use` array.
+
+```js
+...
+module: {
+    rules: [{
+        loader: 'babel-loader',
+        test: /\.js$/,
+        exclude: /node_modules/
+    }, {
+        test: /\.scss$/,
+        use: [
+            'style-loader',
+            'css-loader',
+            'sass-loader'
+        ]
+    }]
+}
+...
+```

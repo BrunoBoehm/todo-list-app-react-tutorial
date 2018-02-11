@@ -15,8 +15,10 @@
     "babel-preset-react": "^6.24.1",
     "css-loader": "^0.28.9",
     "live-server": "^1.2.0",
+    "node-sass": "^4.7.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "sass-loader": "^6.0.6",
     "style-loader": "^0.20.1",
     "webpack": "^3.11.0",
     "webpack-dev-server": "^2.11.1"
