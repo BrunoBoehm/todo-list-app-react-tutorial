@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import './styles/styles.css';
 
 console.log('App.js is running!!');
 
