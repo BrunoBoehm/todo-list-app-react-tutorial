@@ -582,8 +582,19 @@ const Header = () => (
 );
 
 export default Header;
-<<<<<<< HEAD
 ```
-=======
+
+## Routes with params
+We can pass params to our URLs, hashes, query strings... and get them from the props of the rendered component.
+
+`<Route path="/edit/:id" component={EditPage} />` would enable the `EditPage` component to access `props.match.params.id`, like:
+```js
+const EditPage = (props) => {
+  return (
+    <div>
+      Editing the id: {props.match.params.id}
+    </div>
+  )
+}
 ```
->>>>>>> e73cd04705bd398d6b709fc80b694ebb2d8040b8
+Note how we need to pass in props to the arrow function to be able to access them inside. Also note that this is only available to components referenced inside of the `<Route />` component. 
