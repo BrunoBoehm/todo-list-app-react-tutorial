@@ -508,3 +508,37 @@ Let's not forget to add switch to our import
 ```js
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 ```
+
+## Adding links
+We can use the react-router `<Link>` and `<NavLink>` components.
+```js
+const NotFoundPage = () => {
+    return (
+        <p>This is the 404 page - <Link to="/">Go Home</Link></p>
+    )
+};
+```
+And not forget to add it to the named import `import { BrowserRouter, Route, Switch, Link } from 'react-router-dom';`
+
+We can improve this for more complex use like a navigation and active props, by using `<NavLink>`.
+Let's import it `import { BrowserRouter, Route, Switch, Link, NavLink } from 'react-router-dom';`.
+
+We can create a <Header> component and start using `activeClassName`
+```js
+const Header = () => (
+  <header>
+    <h1>Nav App Title</h1>
+    <NavLink to="/" activeClassName="is-active" exact={true} >Homepage</NavLink>
+    <NavLink to="/contact" activeClassName="is-active">Contact</NavLink>
+  </header>
+);
+```
+*Note we need to use `return` if we use {} on our function. If we're using the implicit return, we can use () for a better layout, but it's not technically needed.*
+
+We can add a styling for `.is-active` in our `_base.scss`
+```css
+.is-active {
+    font-weight: bold;
+}
+```
+Now we've hijacked the browser way to handle links and we don't rely on the server anymore.
