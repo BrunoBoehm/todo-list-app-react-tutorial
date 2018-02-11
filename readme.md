@@ -313,3 +313,35 @@ module: {
 }
 ...
 ```
+
+## SCSS architecture and production setup
+
+We can create a `styles/base/` folder to host our SCSS partials (using the _ syntax), let's create `_base.scss` and `_settings.scss` (for our colors, sizes...) and dump some basic styling in the base file.
+```scss
+// 1 rem = 16px means 16px*.625 = 10px enabling us to work on base 10
+// 2.2rem = 22px now
+html {
+  font-size: 62.5%;
+}
+
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 1.6rem;
+}
+
+h1 {
+    font-size: 2.2rem;
+}
+```
+
+We can now import this partial into our main root styles.scss file with the path to this partial `@import './base/base';`.
+
+We can also create another folder to style our components, like `styles/components/_header.scss` and import it with `@import './components/header'` in our styles.scss file.
+
+Note: we can use the [BEM](http://getbem.com/) syntax to avoid complex nesting
+- Block: something big like a `.header` block
+- Element: something that goes inside the block like `.header__title`
+- Modifier: a variation of an element like, `.header__title--unselected`
+
+We can also add a CSS reset with "normalize css": `yarn add normalize-css` and import it in the app.js file (above the main CSS import) `@import 'normalize-css/normalize.css';` (reference to the normalize-css folder in node_modules). Now we just need to change our test to also accept and load CSS files `test: /\.s?css$/`.
+
