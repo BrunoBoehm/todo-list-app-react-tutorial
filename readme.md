@@ -353,3 +353,20 @@ We can now add it from our index.html with a link
 <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 ```
 Note if the icon was a png we could use `type="image/png"`.
+
+## Mobile considerations
+Currently if we use the chrome mobile view we'll see the website zooms out around /3, this hasn't been optimized for the phone... it uses by default a virtual viewport and tries to fit the iphone default 980px width to 320px. We need to tell mobiles to use the mobile actual width for displaying our content.
+
+We can use a viewport meta tag with `width=device-width` (overrides the 980px default on iOS devices) and also the `initial-scale=1`. In our index.html file:
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1">
+```
+
+Now we can use media queries to handle small devices, for example:
+```css
+@media (min-width: 45rem) {
+  * {
+    color: red;
+  }
+}
+```
