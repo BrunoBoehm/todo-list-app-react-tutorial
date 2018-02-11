@@ -345,3 +345,11 @@ Note: we can use the [BEM](http://getbem.com/) syntax to avoid complex nesting
 
 We can also add a CSS reset with "normalize css": `yarn add normalize-css` and import it in the app.js file (above the main CSS import) `@import 'normalize-css/normalize.css';` (reference to the normalize-css folder in node_modules). Now we just need to change our test to also accept and load CSS files `test: /\.s?css$/`.
 
+## Favicon bonus
+Let's add a favicon by creating an images folder: `public/images/` and loading the dummy react favicon.
+
+We can now add it from our index.html with a link
+```html
+<link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+```
+Note if the icon was a png we could use `type="image/png"`.
