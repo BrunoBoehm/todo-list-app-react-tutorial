@@ -370,3 +370,89 @@ Now we can use media queries to handle small devices, for example:
   }
 }
 ```
+
+# One react component per file
+
+We can store our component files in a `src/components/` folder.
+Each component file will export (default or named export) and then from the main app.js file we can import (in curly braces for named exports, and with any name for a default export). We can leave the .js extension because we're using webpack.
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/App';
+import 'normalize-css/normalize.css';
+import './styles/styles.scss';
+
+ReactDOM.render(<App />, document.getElementById('app'));
+```
+
+Our App.js stateless functional component can look like this (note how the function is the equivalent to `render()`)
+```js
+import React from 'react';
+
+const App = () => {
+    return (
+        <div>
+            <h1>App</h1>
+            <p>Hello World! Welcome to the app!</p>
+        </div>
+    )
+};
+
+export default App;
+```
+Note: in a functional component we can't use state, but we can use props. Remember functional components don't have access to `this`, instead we pass a `props` object as an argument of the function. For instance we could call `<App name="Boilerplate" />` and use the props in the component like so:
+```js
+import React from 'react';
+
+const App = (props) => {
+    return (
+        <div>
+            <h1>{props.name} App</h1>
+            <p>Hello World! Welcome to the app!</p>
+        </div>
+    )
+};
+
+export default App;
+```
+
+Or if we prefer we can already create a class component (note it's always uppercase letter to signify it's a component), but of course with so little functonalities it's an overkill and not so great for performance (it has the overhead of extending the class).
+```js
+import React from 'react';
+
+class App extends React.Component {
+    render() {
+      return (
+        <div>
+            <h1>App</h1>
+            <p>Hello World! Welcome to the app!</p>
+        </div>
+      )
+    };
+};
+
+export default App;
+```
+
+
+*Note that for functional/presentational components, it is better to use the const syntax and give the component a name, since this will be used in the react devtools to identify the component.*
+
+```js
+import React from 'react';
+// don't do this
+export default (props) => {
+  ...
+};
+
+// do this
+export const Component = (props) => {
+  ...
+};
+
+// or do this
+const Component = (props) => {
+  ...
+};
+export default Component;
+```
