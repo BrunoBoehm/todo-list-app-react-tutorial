@@ -598,3 +598,235 @@ const EditPage = (props) => {
 }
 ```
 Note how we need to pass in props to the arrow function to be able to access them inside. Also note that this is only available to components referenced inside of the `<Route />` component. 
+
+# React and Redux
+Lets connect our React app to the Redux store, by using connected components (components connected to the redux : the can fetch values from the store, and dispatch actions to the store - *reacting* to user interactions).
+
+We can create 4 different folders inside of our `src/` folder:
+- actions (actions only describe the fact that *something happened*) or more precisely action generators (functions that return an action)
+- reducers (describe how the application's state changes in response to actions sent to the store), it is a pure function that takes the previous state and an action, and returns the next state `(previousState, action) => newState`
+- store
+- selectors (queries to the reduc store)
+
+Let's also add redux to our project `yarn add redux`. Make sure to restart the dev server for changes to pick up `yarn run dev-server`
+
+## Store
+Let's create a `src/store` folder and create our store in there.
+
+We need to import the `createStore` (named export) function from redux. It takes a functoin as argument, that itself takes `state` and an `action` as parameters. We're only going to call it once to kick things off, there is no state the first time the function gets called, but then it will evolve as soon as we dispatch actions and it gets called again.
+
+The `state` argument takes a default, like the default object `{}` containing what we need. We don't neet a default value for the `action`.
+
+Simplest configuration would be 
+```js
+import { createStore } from 'redux';
+
+const store = createStore( ( state = {} ) => {
+    return state;
+});
+
+console.log(store.getState());
+```
+
+We can use `store.getState();` to fetch/get the current state object, and check it by `console.log`.
+
+Now we can configure the store to receive actions. We test for the action type using `action.type` and then return a new state object. Note we don't change the state directly, instead we return an object (the new state).
+
+```js
+import { createStore } from 'redux';
+
+const store = createStore( ( state = { count: 0 }, action ) => {
+    if (action.type === 'INCREMENT') {
+        return {
+            count: state.count + 1
+        };
+    } else {
+        return state;
+    }
+} );
+
+console.log(store.getState());
+// Object { count: 0}
+
+store.dispatch({
+    type: 'INCREMENT'
+})
+
+console.log(store.getState());
+// Object { count: 1}
+```
+
+However it is often easier to use a `switch` statement, it is easier to scale and read.
+```js
+import { createStore } from 'redux';
+
+const store = createStore( ( state = { count: 0 }, action ) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            return {
+                count: state.count + 1
+            };
+        default:
+            return state;
+    }
+} );
+```
+
+### Subscribing to the store
+To be able to rerender our application we can subscribe to the store (instead of manually calling `store.getState()`). Redux gives us `store.subscribe()` and it takes a function. It will be called each and every time the store changes. The simplest configuration would be.
+```js
+store.subscribe( () => {
+    console.log(store.getState());
+});
+```
+This will log the state each time an action is dispatched and the store changes.
+
+To stop subscribing at some point we can just call it again, calling the return function of `subscribe()` without any argument.
+```js
+const unsubscribe = store.subscribe( () => {
+    console.log(store.getState());
+});
+
+unsubscribe();
+```
+
+### Dynamic actions
+Now note that if we need to pass dynamic values to our actions, we can write it like this
+```js
+store.dispatch({
+    type: 'INCREMENT',
+    incrementBy: 5
+})
+```
+
+But now we need to update our store, and we can handle dynamic action value by testing `action.incrementBy` using the ternary operator to see if there is a value.
+```js
+import { createStore } from 'redux';
+
+const store = createStore( ( state = { count: 0 }, action ) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            const incrementBy = typeof action.incrementBy === 'number' ? action.incrementBy : 1;
+            return {
+                count: state.count + incrementBy
+            };
+        default:
+            return state;
+    }
+} );
+```
+
+## Reducers
+A reducer describes how to change the state based on an action. Let's refactor.
+```js
+import { createStore } from 'redux';
+
+const countReducer = ( state = { count: 0 }, action ) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            const incrementBy = typeof action.incrementBy === 'number' ? action.incrementBy : 1;
+            return {
+                count: state.count + incrementBy
+            };
+        default:
+            return state;
+    }
+}
+
+const store = createStore( countReducer );
+// note we just reference it, and not calling it.
+```
+
+A reducer is a pure function. The output is only determined by the input : `state` and `action` (no external influence). For instance the following is not a pure function.
+```js
+let a = 10;
+const add = (b) => {
+    return a + b;
+};
+```
+
+Note also the second rule of a reducer is that we never change/mutate directly state or action. We just return state in a new object instead.
+
+### Combining reducers
+When we have more complex apps and more complex state made of several parts, we need to use several reducers.
+To do so we can use `combineReducers` from the Redux library: 
+```js
+import { createStore, combineReducers } from 'redux';
+
+const store = createStore(
+    combineReducers({
+        todos: todosReducer,
+        filters: filtersReducer
+    })
+);
+```
+CombineReducers takes an honest object with 
+- keys as root state name
+- value is the reducer that handles it
+
+
+## Actions & Actions generators
+In the `src/actions` folder let's create a `todos.js` file to host our action generators.
+
+Actions allow us to communicate with and change the redux store, like "create a note", “edit a note". Actions are an object that gets sent to the store, it has a payload of 
+- the type of action we'd like to take like "walk", "stop_walking" and the convention is to write them UPPERCASE_ACTION.
+- the content (dynamic information from user input)
+
+We send an action the the store using the `dispatch()` function on the store.
+
+We can improve all of our `dispatch()`calls using action generators and using object/array ES6 destructuring.
+Action generators are function that return action objects. It will make the action shorter and less error prone (typing `type: 'INCREMENT'` is open to easy typos).
+
+The action generator is a function that takes input in and returns the action as an object.
+```js
+const incrementCount = () => {
+    return {
+        type: 'INCREMENT'
+    };
+};
+```
+That can be rewritten using the shorthand syntax of implicit return (wrapping the return object in parentheses)
+```js
+const incrementCount = () => ({
+    type: 'INCREMENT'
+});
+```
+We can now call `store.dispatch(incrementCount());`.
+
+Let's now make it work by calling it with an argument: `store.dispatch(incrementCount( { incrementBy: 5 } ));`.
+To make this work we just need to update our action generator
+```js
+const = incrementCount = (payload = {}) => ({
+    type: 'INCREMENT',
+    incrementBy: typeof payload.incrementBy === 'number' ? payload.incrementBy : 1
+});
+```
+We need the default in the action generator because if we don't and don't provide an argument, when we'll try to access the incrementBy property of the undefined payload, it will throw an error.
+
+We can update our store switch to read the value from `action.incrementBy`.
+```js
+import { createStore } from 'redux';
+
+const store = createStore( ( state = { count: 0 }, action ) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            return {
+                count: state.count + action.incrementBy
+            };
+        default:
+            return state;
+    }
+} );
+```
+
+Thanks to destructuring `{ incrementBy = 1 }` (and default value) we can even take it one step further...
+```js
+const incrementCount = ({ incrementBy = 1 } = {}) => ({
+    type: 'INCREMENT',
+    incrementBy
+    // similar to 
+    // incrementBy: incrementBy
+});
+```
+It is now way easier to make these funciton calls (action generators) instead of writing the action over and over again.
+
