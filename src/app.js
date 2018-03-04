@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import AppRouter from './routers/AppRouter';
 import configureStore from './store/configureStore';
+import { Provider } from 'react-redux';
 import { addTodo, removeTodo, editTodo } from './actions/todos';
 import { setTextFilter, sortByDate, sortByPriority, setEndDate } from './actions/filters';
 import getVisibleTodos from './selectors/todos';
@@ -34,4 +35,10 @@ const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'S
 // store.dispatch( sortByDate() );
 // store.dispatch( setEndDate(15789) );
 
-ReactDOM.render(<AppRouter />, document.getElementById('app'));
+const jsx = (
+    <Provider store={store}>
+        <AppRouter />
+    </Provider>
+);
+
+ReactDOM.render( jsx, document.getElementById('app') );

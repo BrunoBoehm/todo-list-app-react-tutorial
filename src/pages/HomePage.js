@@ -1,4 +1,5 @@
 import React from 'react';
+import TodoList from '../components/TodoList';
 
 class HomePage extends React.Component {
     render() {
@@ -6,6 +7,7 @@ class HomePage extends React.Component {
             <div>
                 <h1>App</h1>
                 <p>Hello World! Welcome to the app!</p>
+                <TodoList />
             </div>
         )
     };

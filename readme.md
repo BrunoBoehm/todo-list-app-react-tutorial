@@ -1172,3 +1172,142 @@ store.dispatch( setEndDate(15789) );
 
 ReactDOM.render(<AppRouter />, document.getElementById('app'));
 ```
+
+# Connection React and Redux
+The ReactRedux libray uses HOC (high order components). It is a component that renders another component.
+It enables code reuse, render hijacking, prop manipulation, and to abstract state.
+
+```js
+import 'React' from 'react';
+import 'ReactDOM' from 'react-dom';
+
+const Info = (props) => (
+    <div>
+        <h1>Info</h1>
+        <p>The info is: {props.info}</p>
+    </div>
+);
+
+// we create a function that takes a component as parameter and returns a component
+// note how we spread the props passed from the bigger component so that they can reach the WrappedComponent
+const withAdminWarning = (WrappedComponent) => {
+    return (props) => (
+        <div>
+            {props.isAdmin && <p>This is private info. Please don't share</p>}
+            <WrappedComponent {...props} />
+        </div>
+    );
+};
+
+// we store the returned component and pass in Info (as the WrappedComponent).
+const AdminInfo = withAdminWarning(Info);
+
+ReactDOM.render(<AdminInfo isAdmin={true} info="the info" />, document.getElementById('app'));
+```
+This is how all of our components can now have access to the redux store.
+We get a `<Provider>` root component as well as a `connect()` function. 
+
+Let's `yarn add react-redux` and restart de dev server `yarn run dev-server`.
+We can import it to our `app.js`: `import { Provider } from 'react-redux';`.
+The Provider enables us to provide the store to all of the components that ake up our application.
+
+The setup is quite simple
+```js
+const jsx = (
+    <Provider store={store}>
+        <AppRouter />
+    </Provider>
+);
+
+ReactDOM.render( jsx, document.getElementById('app') );
+```
+We can now in each of the components use the `connect()` function. To do so we import it in the component file `import { connect } from 'react-redux'`.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        <p>{props.name}</p>
+    </div>
+);
+
+const ConnectedTodoList = connect((state) => {
+    return {
+        name: 'Yo'
+    };
+})(TodoList);
+
+export default ConnectedTodoList;
+```
+We call the `connect()()` function around our WrappedComponent (TodoList in this case). Here `connect()` will return a function. We also need to specify what type of information we want to connect, by pasing a function as parameter to the `connect()` function. Here it returns an object that we can access as props. Not we also export the connected version of the component.
+
+Obvioulsy a more interesting version would be
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+
+const TodoList = () => (
+    <div>
+        <h3>Todo List</h3>
+        <p>{props.todos.length}</p>
+    </div>
+);
+
+const ConnectedTodoList = connect((state) => {
+    return {
+        todos: state.todos
+    };
+})(TodoList);
+
+export default ConnectedTodoList;
+```
+
+A more common pattern is to rewrite it by using `mapStateToProps` and direct export like this:
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        <p>{props.todos.length}</p>
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        todos: state.todos
+    };
+};
+
+export default connect(mapStateToProps)(TodoList);
+```
+
+We can add more detail to the state mapped to the props, like our filters for instance.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        <p>Todo Length: {props.todos.length}</p>
+        <p>Filter: {props.filters.text}</p>
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        todos: state.todos,
+        filters: state.filters
+    };
+};
+
+export default connect(mapStateToProps)(TodoList);
+```
+
+Note that when the component is connected to the store it is reactive: the component will re-render if the state changes. We don't nee to use `store.subscribe()` or `store.getState()`. Most of our components will be presentational components like this.
+
+## Single Todo List Item
