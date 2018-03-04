@@ -599,7 +599,7 @@ const EditPage = (props) => {
 ```
 Note how we need to pass in props to the arrow function to be able to access them inside. Also note that this is only available to components referenced inside of the `<Route />` component. 
 
-# React and Redux
+# React and Redux INTRO
 Lets connect our React app to the Redux store, by using connected components (components connected to the redux : the can fetch values from the store, and dispatch actions to the store - *reacting* to user interactions).
 
 We can create 4 different folders inside of our `src/` folder:
@@ -761,7 +761,7 @@ const store = createStore(
 );
 ```
 CombineReducers takes an honest object with 
-- keys as root state name
+- keys as root property state name
 - value is the reducer that handles it
 
 
@@ -830,3 +830,345 @@ const incrementCount = ({ incrementBy = 1 } = {}) => ({
 ```
 It is now way easier to make these funciton calls (action generators) instead of writing the action over and over again.
 
+# Setuping Redux
+
+## Store
+Our state would look something like
+```js
+const demoState = {
+    todos: [{
+        id: 'kejfnjefn',
+        title: 'Homework', 
+        description: 'Do my homework',
+        priority: 10,
+        createdAt: 0
+    }],
+    filters: {
+        text: 'homework',
+        sortBy: 'priority',
+        startDate: undefined,
+        endDate: undefined
+    }
+}
+```
+
+Let's create a `configureStore.js` file in our `src/store/` folder.
+```js
+import { createStore, combineReducers } from 'redux';
+import todosReducer from '../reducers/todos';
+import filtersReducer from '../reducers/filters';
+
+// const store = createStore( todosReducer );
+
+export default () => {
+    const store = createStore(
+        combineReducers({
+            todos: todosReducer,
+            filters: filtersReducer
+        })
+    );
+    return store;
+}
+
+// console.log(store.getState());
+```
+The `combineReducers` setup will enable us to add several reducers.
+
+Let's call our store from the root `app.js` file
+```js
+import configureStore from './store/configureStore';
+```
+As we set it up, calling configureStore like const `store = configureStore();` will setup the store and return the store as an object.
+
+## Reducers Basic setup
+Let's create a `todos.js` and `filters.js` file in our `src/reducers` folder.
+
+Inside of `todos.js` we can setup the basics:
+```js
+const todosReducerDefaultState = [];
+
+const todosReducer = ( state = todosReducerDefaultState, action ) => {
+    switch (action.type) {
+        default:
+            return state;
+    };
+};
+
+export default todosReducer;
+```
+
+Inside of `filters.js`:
+```js
+const filtersReducerDefaultState = {
+    text: '',
+    sortBy: 'priority',
+    startDate: undefined,
+    endDate: undefined
+}
+
+const filtersReducer = ( state = filtersReducerDefaultState, action ) => {
+    switch (action.type) {
+        default: 
+            return state;
+    };
+};
+
+export default filtersReducer;
+```
+Now when we log the initial state with `console.log(getState());` we return an object with two properties thanks to `combineReducers` (todos and filters).
+Of course make sure both reducers are exported and imported...
+
+## Dispatching actions with action generators
+Inside of our `src/actions` folder, let's create action generators.
+
+For our `todos.js` file we can setup 3 action generators and export them using named exports.
+```js
+import uuid from 'uuid';
+
+// ADD_TODO
+export const addTodo = ( { title = '', description ='', priority = 0, createdAt = 0 } = {} ) => ({
+    type: 'ADD_TODO',
+    todo: {
+        id: uuid(),
+        title, 
+        description,
+        priority,
+        createdAt
+    }
+});
+
+// REMOVE_TODO
+export const removeTodo = ( {id } = {} ) => ({
+    type: 'REMOVE_TODO',
+    id
+});
+
+// EDIT_TODO
+export const editTodo = ( { id, updates } = {} ) => ({
+    type: 'EDIT_TODO',
+    id, 
+    updates
+});
+```
+Note we destructure the firts argument of the action generator, and if it doesn't exist we destructure an empty object.
+
+## Improving our reducers to handle dispatched actions
+Inside of `todos.js`:
+```js
+const todosReducerDefaultState = [];
+
+const todosReducer = ( state = todosReducerDefaultState, action ) => {
+    switch (action.type) {
+        case 'ADD_TODO':
+            return state.concat(action.todo);
+        default:
+            return state;
+    };
+};
+
+export default todosReducer;
+```
+Remember we don't want to mutate/change the state directly, we just want to read off of it. This is why we never use `state.push()`. The non-destructive method is `state.concat()` that combines the previous state and adds another item and returns a new array.
+
+There is actually another way to do it using the ES6 spread operator.
+```js
+const todosReducerDefaultState = [];
+
+const todosReducer = ( state = todosReducerDefaultState, action ) => {
+    switch (action.type) {
+        case 'ADD_TODO':
+            return [...state, action.todo];
+        case 'REMOVE_TODO':
+            return state.filter( ({ id }) => id !== action.id );
+        case 'EDIT_TODO':
+            return state.map((expense) => {
+                if (expense.id === action.id) {
+                    return {...expense, ...action.updates};
+                } else {
+                    return expense;
+                };
+            });
+        default:
+            return state;
+    };
+};
+
+export default todosReducer;
+```
+We also use for the 'REMOVE_TODO' the `filter()` function, that returns a new array, and takes a function that returns true (and keeps the item) or false. We take in an array of `todo` items that we destructure and only take the first parameter `{ id }`. We can even simplify it further using implicit return.
+```js
+// from
+return state.filter((  { id } ) => {
+    return id !== action.id
+});   
+
+// to
+return state.filter((  { id } ) => id !== action.id );
+```
+
+To setup the edit action, we also use the object spread operator by adding it `yarn add babel-plugin-transform-object-rest-spread` and adding it to our plugins in `.babelrc`.
+```js
+    "plugins": [
+      "transform-object-rest-spread"
+    ]
+```
+We then use the `map()` function to return a new array containing all of the todos, including the edited one. We take all existing properties of the item to edit, and spread out the properties that need to be updated.
+
+We can also add the actions genetors for filters inside of `src/action/filters.js`
+```js
+// SET_TEXT_FILTER
+export const setTextFilter = (text = '') => ({
+    type: 'SET_TEXT_FILTER',
+    text
+});
+
+// SORT_BY_DATE
+export const sortByDate = () => ({
+    type: 'SORT_BY_DATE'
+})
+
+// SORT_BY_PRIORITY
+export const sortByPriority = () => ({
+    type: 'SORT_BY_PRIORITY'
+})
+
+// SET_END_DATE
+export const setEndDate = (endDate) => ({
+    type: 'SET_END_DATE',
+    endDate
+})
+```
+
+And we can create the reducer for filters inside of `src/reducers/filters.js`
+```js
+const filtersReducerDefaultState = {
+    text: 'homework',
+    sortBy: 'priority',
+    endDate: undefined
+}
+
+const filtersReducer = ( state = filtersReducerDefaultState, action ) => {
+    switch (action.type) {
+        case 'SET_TEXT_FILTER':
+            return {
+                ...state,
+                text: action.text
+            };
+        case 'SORT_BY_DATE':
+            return {
+                ...state,
+                sortBy: 'date'
+            };
+        case 'SORT_BY_PRIORITY':
+            return {
+                ...state,
+                sortBy: 'priority'
+            };
+        case 'SET_END_DATE':
+            return {
+                ...state,
+                endDate: action.endDate
+            }
+        default: 
+            return state;
+    };
+};
+
+export default filtersReducer;
+```
+
+## Creating the Selectors
+Let's create a `src/selectors/todos.js` file and a basic setup would be
+```js
+export default ( todos, filters ) => {
+    return todos;
+}
+```
+
+Now if we import it with `import getVisibleTodos from './selectors/todos';` and subscribe to the store like so
+```js
+store.subscribe(() => {
+    const state = store.getState();
+    const visibleTodos = getVisibleTodos( state.todos, state.filters );
+    console.log(visibleTodos);
+});
+```
+We will be able to see printed the `return` of all `todos`... let's make it filter them! The state gets updated with parameters to filter, and then we print the results.
+
+We can destructure `filters` and then use the `filter()` function to only return the item of the `state.todos` array if all filtering conditions are `true`. Let's only filter, we'll order after.
+```js
+export default ( todos, {text, sortBy, endDate} ) => {
+    return todos.filter((todo) => {
+        const textMatch = todo.description.toLowerCase().includes(text.toLowerCase());
+        const endDateMatch = typeof endDate !== 'number' || todo.createdAt <= endDate ;
+
+        return textMatch && endDateMatch;
+    });
+};
+```
+
+Timestamps are counted in milliseconds taken from January 1st 1970 (unix epoch).
+If the endDate is not a number, the `typeof` will evaluate to true and the item will pass the filter test.
+If the endDate is a number, the `typeof` will evaulate to false, and the second test will determine if the item should be filtered out or not.
+We have and `endDate` match if the endDate is not equal to a number or if the timing conditions is right.
+
+We can now put some sorting in place, using `sort()`. We need to define a compare function to be able to sort our array of objects.
+
+```js
+export default ( todos, {text, sortBy, endDate} ) => {
+    return todos.filter( (todo) => {
+        const textMatch = todo.description.toLowerCase().includes(text.toLowerCase());
+        const endDateMatch = typeof endDate !== 'number' || todo.createdAt <= endDate ;
+
+        return textMatch && endDateMatch;
+    }).sort( (a, b) => {
+        if (sortBy === 'date') {
+            return a.createdAt < b.createdAt ? 1 : -1 ;
+        }
+
+        if (sortBy === 'priority') {
+            return a.priority < b.priority ? 1 : -1 ;
+        }
+    });
+};
+```
+
+
+## Testing it out
+Now we have our action generators in place, we can test it out and dispatch some test actions like so, in `app.js`:
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import AppRouter from './routers/AppRouter';
+import configureStore from './store/configureStore';
+import { addTodo, removeTodo, editTodo } from './actions/todos';
+import { setTextFilter, sortByDate, sortByPriority, setEndDate } from './actions/filters';
+import getVisibleTodos from './selectors/todos';
+import 'normalize-css/normalize.css';
+import './styles/styles.scss';
+
+const store = configureStore();
+
+store.subscribe(() => {
+    const state = store.getState();
+    const visibleTodos = getVisibleTodos( state.todos, state.filters );
+    console.log(visibleTodos);
+});
+
+const todoOne = store.dispatch( addTodo({ title: 'First Title', description: 'First Description'}) );
+const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'Second Description'}) );
+
+store.dispatch( removeTodo({ 
+    id: todoOne.todo.id 
+}));
+store.dispatch( editTodo({ 
+    id: todoTwo.todo.id,
+    updates: { title: 'Edited Todo Two' }
+}));
+store.dispatch( setTextFilter('sprint') );
+store.dispatch( sortByPriority() );
+store.dispatch( sortByDate() );
+store.dispatch( setEndDate(15789) );
+
+ReactDOM.render(<AppRouter />, document.getElementById('app'));
+```
