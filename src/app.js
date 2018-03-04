@@ -5,7 +5,7 @@ import configureStore from './store/configureStore';
 import { Provider } from 'react-redux';
 import { addTodo, removeTodo, editTodo } from './actions/todos';
 import { setTextFilter, sortByDate, sortByPriority, setEndDate } from './actions/filters';
-import getVisibleTodos from './selectors/todos';
+import selectTodos from './selectors/todos';
 import 'normalize-css/normalize.css';
 import './styles/styles.scss';
 
@@ -13,7 +13,7 @@ const store = configureStore();
 
 store.subscribe(() => {
     const state = store.getState();
-    const visibleTodos = getVisibleTodos( state.todos, state.filters );
+    const visibleTodos = selectTodos( state.todos, state.filters );
     console.log(state);
     console.log(visibleTodos);
 });
@@ -30,7 +30,11 @@ const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'S
 //     id: todoTwo.todo.id,
 //     updates: { title: 'Edited Todo Two' }
 // }));
-// store.dispatch( setTextFilter('first') );
+
+setTimeout(() => {
+    store.dispatch( setTextFilter('first') );
+}, 3000);
+
 // store.dispatch( sortByPriority() );
 // store.dispatch( sortByDate() );
 // store.dispatch( setEndDate(15789) );

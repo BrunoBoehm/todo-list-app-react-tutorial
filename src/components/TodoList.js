@@ -1,18 +1,18 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import TodoListItem from './TodoListItem';
+import selectTodos from '../selectors/todos';
 
 const TodoList = (props) => (
     <div>
         <h3>Todo List</h3>
-        <p>Todo Length: {props.todos.length}</p>
-        <p>Filter: {props.filters.text}</p>
+        {props.todos.map((todo) => <TodoListItem key={todo.id} {...todo} />)}
     </div>
 );
 
 const mapStateToProps = (state) => {
     return {
-        todos: state.todos,
-        filters: state.filters
+        todos: selectTodos(state.todos, state.filters)
     };
 };
 

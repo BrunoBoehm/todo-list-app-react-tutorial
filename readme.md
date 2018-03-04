@@ -1311,3 +1311,75 @@ export default connect(mapStateToProps)(TodoList);
 Note that when the component is connected to the store it is reactive: the component will re-render if the state changes. We don't nee to use `store.subscribe()` or `store.getState()`. Most of our components will be presentational components like this.
 
 ## Single Todo List Item
+Lets create a new component in our `src/components` folder
+```js
+import React from 'react';
+
+const TodoListItem = ( {title, description, priority, createdAt} ) => (
+    <div>
+        <h3>[{priority}] {title}</h3>
+        <p>{description}</p>
+        <p>{createdAt}</p>
+    </div>
+);
+
+export default TodoListItem;
+```
+
+No we can use it from our TodoList component.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import TodoListItem from './TodoListItem';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        <p>Filter: {props.filters.text}</p>
+        {props.todos.map((todo) => <TodoListItem key={todo.id} {...todo} />)}
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        todos: state.todos,
+        filters: state.filters
+    };
+};
+
+export default connect(mapStateToProps)(TodoList);
+```
+
+## Sorting the items
+Now let's modify a little our `TodoList` component so that instead of reading from the overall state, it only takes from our selector, and only gives to our components props the selected Todo items. We import the selector `import selectTodos from '../selectors/todos';`.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import TodoListItem from './TodoListItem';
+import selectTodos from '../selectors/todos';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        {props.todos.map((todo) => <TodoListItem key={todo.id} {...todo} />)}
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        todos: selectTodos(state.todos, state.filters)
+    };
+};
+
+export default connect(mapStateToProps)(TodoList);
+```
+
+And now we can test this out by dispatching an action like this
+```js
+const todoOne = store.dispatch( addTodo({ title: 'First Title', description: 'First Description', priority: 10, createdAd: 1000}) );
+const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'Second Description', priority: 1, createdAt: -1000}) );
+
+setTimeout(() => {
+    store.dispatch( setTextFilter('first') );
+}, 3000);
+```

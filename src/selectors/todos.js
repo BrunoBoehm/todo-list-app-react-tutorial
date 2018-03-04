@@ -1,12 +1,3 @@
-// export default ( todos, {text, sortBy, endDate} ) => {
-//     return todos.filter( (todo) => {
-//         const textMatch = todo.description.toLowerCase().includes(text.toLowerCase());
-//         const endDateMatch = typeof endDate !== 'number' || todo.createdAt <= endDate ;
-
-//         return textMatch && endDateMatch;
-//     });;
-// };
-
 export default ( todos, {text, sortBy, endDate} ) => {
     return todos.filter( (todo) => {
         const textMatch = todo.description.toLowerCase().includes(text.toLowerCase());
