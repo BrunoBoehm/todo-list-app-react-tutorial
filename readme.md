@@ -1434,3 +1434,29 @@ export default connect(mapStateToProps)(TodoList);
 ```
 
 Now we also need to be able to write to the store, so that state changes and the list results are filtered based on our input.
+If we try to type in the filed we seen a console warning telling us that we provided a 'value' prop to a form field ithout an `onChange` handler and that this will render a read-only field.
+
+`onChange` takes a function and anytime the input changes the function fires. we have access to the input element thanks to `e.target`.
+
+Remember we have access to dispatch from inside of our connected component.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import { setTextFilter } from '../actions/filters';
+
+const TodoListFilters = (props) => (
+    <div>
+        <input type="text" value={props.filters.text} onChange={(e) => {
+            props.dispatch(setTextFilter(e.target.value));
+        }} />
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        filters: state.filters
+    };
+};
+
+export default  connect(mapStateToProps)(TodoListFilters);
+```
