@@ -1460,3 +1460,27 @@ const mapStateToProps = (state) => {
 
 export default  connect(mapStateToProps)(TodoListFilters);
 ```
+
+### Removing a Todo item
+We can start of by importing `{ connect }` and `{ removeTodo }` into our `TodoListItem.js` component.
+Note that if we do not require anything from the store, we can juste use `connect()` without anything in the first parentheses, it will still provide the dispatch function to us for use in the component.
+
+```js
+import React from 'react';
+import { removeTodo } from '../actions/todos';
+import { connect } from 'react-redux';
+
+const TodoListItem = ( {title, description, priority, createdAt, id, dispatch} ) => (
+    <div>
+        <h3>[{priority}] {title}</h3>
+        <p>{description}</p>
+        <p>{createdAt}</p>
+        <button onClick={() => {
+            dispatch(removeTodo( { id } ));
+        }}>Remove</button>
+    </div>
+);
+
+export default connect()(TodoListItem);
+```
+We destructure props and need to add `dispatch` and `id`. We also use the shorthand for `{ id: id}`.
