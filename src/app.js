@@ -31,9 +31,9 @@ const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'S
 //     updates: { title: 'Edited Todo Two' }
 // }));
 
-setTimeout(() => {
-    store.dispatch( setTextFilter('first') );
-}, 3000);
+// setTimeout(() => {
+//     store.dispatch( setTextFilter('first') );
+// }, 3000);
 
 // store.dispatch( sortByPriority() );
 // store.dispatch( sortByDate() );

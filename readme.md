@@ -1383,3 +1383,54 @@ setTimeout(() => {
     store.dispatch( setTextFilter('first') );
 }, 3000);
 ```
+
+### Dispatching from a connected component
+Let's now dispatch from a connected component.
+
+We can start bt reading from the store.
+We `mapStateToProps` and only take the filters, and make them available to our component's props.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+
+const TodoListFilters = (props) => (
+    <div>
+        <input type="text" value={props.filters.text} />
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        filters: state.filters
+    };
+};
+
+export default  connect(mapStateToProps)(TodoListFilters);
+```
+
+We now can call this file from our `TodoList.js` component
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import TodoListItem from './TodoListItem';
+import selectTodos from '../selectors/todos';
+import TodoListFilters from './TodoListFilters';
+
+const TodoList = (props) => (
+    <div>
+        <h3>Todo List</h3>
+        <TodoListFilters />
+        {props.todos.map((todo) => <TodoListItem key={todo.id} {...todo} />)}
+    </div>
+);
+
+const mapStateToProps = (state) => {
+    return {
+        todos: selectTodos(state.todos, state.filters)
+    };
+};
+
+export default connect(mapStateToProps)(TodoList);
+```
+
+Now we also need to be able to write to the store, so that state changes and the list results are filtered based on our input.
