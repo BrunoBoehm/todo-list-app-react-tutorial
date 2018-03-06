@@ -20,6 +20,8 @@ store.subscribe(() => {
 
 const todoOne = store.dispatch( addTodo({ title: 'First Title', description: 'First Description', priority: 10, createdAd: 1000}) );
 const todoTwo = store.dispatch( addTodo({ title: 'Second Title', description: 'Second Description', priority: 1, createdAt: -1000}) );
+const todoThree = store.dispatch( addTodo({ title: 'Third Title', description: 'Third Description', priority: 4, createdAt: 8000}) );
+
 
 // console.log(todoOne);
 
