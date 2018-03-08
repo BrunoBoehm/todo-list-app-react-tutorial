@@ -25,7 +25,7 @@ export default class TodoForm extends React.Component {
 
     onPriorityChange(e) {
         const priority = e.target.value;
-        if (priority.match(/^\d{1}$/)) {
+        if (priority.match(/^([1-9]|10)$/)) {
             this.setState(() => ({priority}));
         }
     }

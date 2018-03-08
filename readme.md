@@ -1652,7 +1652,9 @@ export default class TodoForm extends React.Component {
 
     onPriorityChange(e) {
         const priority = e.target.value;
-        this.setState(() => ({priority}));
+        if (priority.match(/^([1-9]|10)$/)) {
+            this.setState(() => ({priority}));
+        }
     }
 
     render() {
@@ -1685,11 +1687,11 @@ export default class TodoForm extends React.Component {
 ```
 Using the react dev tools we can check out the state of the form while we type to check it's all OK.
 
-With a [Regex](https://regex101.com/) we could make sure the input is in between specific values.
+With a [Regex](https://regex101.com/) we can make sure the input is in between specific values.
 ```js
     onPriorityChange(e) {
         const priority = e.target.value;
-        if (priority.match(/^\d{1}$/)) {
+        if (priority.match(/^([1-9]|10)$/)) {
             this.setState(() => ({priority}));
         }
     }
