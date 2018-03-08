@@ -1531,3 +1531,166 @@ export default  connect(mapStateToProps)(TodoListFilters);
 ```
 
 ### Creating the add/edit form
+Let's create a new componenent `TodoForm.js`.
+
+We need to create a class based component because we will need to use state. Let's create some dumy starting point data:
+```js
+import React from 'react';
+
+export default class TodoForm extends React.Component {
+    render() {
+        return (
+            <div>
+                TodoForm
+            </div>
+        )
+    }
+} 
+```
+
+We will use local component state to track user interactions, and only when the user submits the form will we change the redux store (to either edit a todo or create a new one).
+```js
+import React from 'react';
+
+export default class TodoForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.state = {
+            description: ''
+        };
+    };
+
+    onDescriptionChange(e) {
+        const description = e.target.value;
+        this.setState(() => ({description}));
+    };
+
+    render() {
+        return (
+            <div>
+                <input 
+                    type="text"
+                    placeholder="Title"
+                    autoFocus
+                />
+                <textarea
+                    placeholder="Description of the Todo"
+                    value={this.state.description}
+                    onChange={this.onDescriptionChange}
+                >
+                </textarea>
+                <input 
+                    type="number"
+                    placeholder="Priority"
+                />
+                <button>Add Todo</button>
+            </div>
+        )
+    }
+} 
+```
+We have created a binding between state and component form: it kicks off with default state, and when the form gets changed, the state updates.
+
+Also `this.setState(() => ({description});` is the same as `this.setState(() => ({ description: description }) ;`.
+
+Note how we first create a `const` to store `e.target.value` before using it to setState, otherwise it would throw an error for performance reasons. To make it work we could use :
+```js
+onDescriptionChange(e) {
+    e.persist();
+    this.setState(() => ({description}));
+}
+```
+
+Note our event handlers (`onClick()`, `onSubmit()`) call functions that are defined as class methods (that's why it needs to use `this.`. Also note we don't call the function, we just reference it.
+We need method binding because inside of a class method, this doesn't refer to the class anymore `this.props` would throw an error "cannot read property of undefined", the context doesn't get transfered from the class to the methods inside. The `bind()` method available on functions in Javascript solves the issue, and it takes as parameter the context (we can use `this` as the context to reference the full class. When we use `bind` in the constructore it means we can reference the `this.onDescriptionChange` as many times as we need in the component without binding it every time.
+
+`this.setState()` gets called with an "updater" function as parameter, that describes the updates we want to make based on `prevState` (state object before changes have been applied) and returns an object with the key un values that need to be upated in the state (the rest will not change).
+```js
+handleAddOne() {
+    this.setState((prevState) => {
+        return {
+            count: prevState.count + 1
+        };
+        
+    });
+}
+// or implicitly returning
+handleAddOne() {
+    this.setState((prevState) => ({ count: prevState.count + 1 });
+}
+```
+Not there is the alternative (former) way to use `setState()` by immediately passing in the object, but you can run into issues because state updates are asynchronous.
+We could use the special [transform class properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin to be able to let go of the constructor function and need to bind(this).
+
+Our final component with all event handlers is 
+```js
+import React from 'react';
+
+export default class TodoForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.onTitleChange = this.onTitleChange.bind(this);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onPriorityChange = this.onPriorityChange.bind(this);
+        this.state = {
+            title: '',
+            description: '',
+            priority: 5
+        };
+    };
+
+    onTitleChange(e) {
+        const title = e.target.value;
+        this.setState(() => ({title}));
+    }
+
+    onDescriptionChange(e) {
+        const description = e.target.value;
+        this.setState(() => ({description}));
+    };
+
+    onPriorityChange(e) {
+        const priority = e.target.value;
+        this.setState(() => ({priority}));
+    }
+
+    render() {
+        return (
+            <div>
+                <input 
+                    type="text"
+                    placeholder="Title"
+                    autoFocus
+                    value={this.state.title}
+                    onChange={this.onTitleChange}
+                />
+                <textarea
+                    placeholder="Description of the Todo"
+                    value={this.state.description}
+                    onChange={this.onDescriptionChange}
+                >
+                </textarea>
+                <input 
+                    type="number"
+                    placeholder="Priority"
+                    value={this.state.priority}
+                    onChange={this.onPriorityChange}
+                />
+                <button>Add Todo</button>
+            </div>
+        )
+    }
+}
+```
+Using the react dev tools we can check out the state of the form while we type to check it's all OK.
+
+With a [Regex](https://regex101.com/) we could make sure the input is in between specific values.
+```js
+    onPriorityChange(e) {
+        const priority = e.target.value;
+        if (priority.match(/^\d{1}$/)) {
+            this.setState(() => ({priority}));
+        }
+    }
+```
