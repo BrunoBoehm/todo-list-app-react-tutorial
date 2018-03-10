@@ -1569,22 +1569,24 @@ export default class TodoForm extends React.Component {
     render() {
         return (
             <div>
-                <input 
-                    type="text"
-                    placeholder="Title"
-                    autoFocus
-                />
-                <textarea
-                    placeholder="Description of the Todo"
-                    value={this.state.description}
-                    onChange={this.onDescriptionChange}
-                >
-                </textarea>
-                <input 
-                    type="number"
-                    placeholder="Priority"
-                />
-                <button>Add Todo</button>
+                <form>
+                    <input 
+                        type="text"
+                        placeholder="Title"
+                        autoFocus
+                    />
+                    <textarea
+                        placeholder="Description of the Todo"
+                        value={this.state.description}
+                        onChange={this.onDescriptionChange}
+                    >
+                    </textarea>
+                    <input 
+                        type="number"
+                        placeholder="Priority"
+                    />
+                    <button>Add Todo</button>
+                </form>
             </div>
         )
     }
@@ -1660,26 +1662,28 @@ export default class TodoForm extends React.Component {
     render() {
         return (
             <div>
-                <input 
-                    type="text"
-                    placeholder="Title"
-                    autoFocus
-                    value={this.state.title}
-                    onChange={this.onTitleChange}
-                />
-                <textarea
-                    placeholder="Description of the Todo"
-                    value={this.state.description}
-                    onChange={this.onDescriptionChange}
-                >
-                </textarea>
-                <input 
-                    type="number"
-                    placeholder="Priority"
-                    value={this.state.priority}
-                    onChange={this.onPriorityChange}
-                />
-                <button>Add Todo</button>
+                <form>
+                    <input 
+                        type="text"
+                        placeholder="Title"
+                        autoFocus
+                        value={this.state.title}
+                        onChange={this.onTitleChange}
+                    />
+                    <textarea
+                        placeholder="Description of the Todo"
+                        value={this.state.description}
+                        onChange={this.onDescriptionChange}
+                    >
+                    </textarea>
+                    <input 
+                        type="number"
+                        placeholder="Priority"
+                        value={this.state.priority}
+                        onChange={this.onPriorityChange}
+                    />
+                    <button>Add Todo</button>
+                </form>
             </div>
         )
     }
@@ -1696,3 +1700,112 @@ With a [Regex](https://regex101.com/) we can make sure the input is in between s
         }
     }
 ```
+To learn more about [numeric ranges](https://www.regular-expressions.info/numericranges.html).
+
+Now we can create the `onSubmit` event handler. Our form will take props down from the AddTodoPage or EditTodoPage.
+```js
+import React from 'react';
+
+export default class TodoForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.onTitleChange = this.onTitleChange.bind(this);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onPriorityChange = this.onPriorityChange.bind(this);
+        this.onSubmit = this.onSubmit.bind(this); 
+        this.state = {
+            title: '',
+            description: '',
+            priority: 5,
+            errorMessage: ''
+        };
+    };
+
+    onTitleChange(e) {
+        const title = e.target.value;
+        this.setState(() => ({title}));
+    }
+
+    onDescriptionChange(e) {
+        const description = e.target.value;
+        this.setState(() => ({description}));
+    };
+
+    onPriorityChange(e) {
+        const priority = e.target.value;
+        if ( !priority || priority.match(/^([1-9]|10)$/)) {
+            this.setState(() => ({priority}));
+        }
+    }
+
+    onSubmit(e) {
+        e.preventDefault();
+        
+        if ( !this.state.title ) {
+            this.setState(() => ({errorMessage: 'Please provide a title'}));
+        } else {
+            this.setState(() => ({errorMessage: ''}));
+            this.props.onSubmit({
+                title: this.state.title,
+                description: this.state.description,
+                priority: this.state.priority 
+            });
+        }
+    }
+
+    render() {
+        return (
+            <div>
+                <form onSubmit={this.onSubmit}>
+                    <input 
+                        type="text"
+                        placeholder="Title"
+                        autoFocus
+                        value={this.state.title}
+                        onChange={this.onTitleChange}
+                    />
+                    <textarea
+                        placeholder="Description of the Todo"
+                        value={this.state.description}
+                        onChange={this.onDescriptionChange}
+                    >
+                    </textarea>
+                    <input 
+                        type="number"
+                        placeholder="Priority"
+                        value={this.state.priority}
+                        onChange={this.onPriorityChange}
+                    />
+                    <button>Add Todo</button>
+                </form>
+            </div>
+        )
+    }
+}
+```
+In case there is no title we change the state of the component's form with an error (that can be displayed).
+We add a test for `( !priority || priority.match(/^([1-9]|10)$/))` in case we allow the priority to be empty.
+
+On the `AddTodoPage` component we can import `connect` and our `addTodo` action generator, and dispatch the action to the store, then push the user back to the homepage.
+```js
+import React from 'react';
+import TodoForm from '../components/TodoForm';
+import { connect } from 'react-redux';
+import { addTodo } from '../actions/todos';
+
+const AddTodoPage = (props) => (
+    <div>
+        <h3>Add a Todo</h3>
+        <TodoForm 
+            onSubmit={(todo) => {
+                props.dispatch(addTodo(todo));
+                props.history.push('/');
+                // console.log(todo);
+            }}
+        />
+    </div>
+)
+
+export default connect()(AddTodoPage);
+```
+

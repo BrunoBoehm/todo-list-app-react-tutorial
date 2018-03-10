@@ -6,10 +6,12 @@ export default class TodoForm extends React.Component {
         this.onTitleChange = this.onTitleChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onPriorityChange = this.onPriorityChange.bind(this);
+        this.onSubmit = this.onSubmit.bind(this); 
         this.state = {
             title: '',
             description: '',
-            priority: 5
+            priority: 5,
+            errorMessage: ''
         };
     };
 
@@ -25,34 +27,51 @@ export default class TodoForm extends React.Component {
 
     onPriorityChange(e) {
         const priority = e.target.value;
-        if (priority.match(/^([1-9]|10)$/)) {
+        if (!priority || priority.match(/^([1-9]|10)$/)) {
             this.setState(() => ({priority}));
+        }
+    }
+
+    onSubmit(e) {
+        e.preventDefault();
+        
+        if ( !this.state.title ) {
+            this.setState(() => ({errorMessage: 'Please provide a title'}));
+        } else {
+            this.setState(() => ({errorMessage: ''}));
+            this.props.onSubmit({
+                title: this.state.title,
+                description: this.state.description,
+                priority: this.state.priority 
+            });
         }
     }
 
     render() {
         return (
             <div>
-                <input 
-                    type="text"
-                    placeholder="Title"
-                    autoFocus
-                    value={this.state.title}
-                    onChange={this.onTitleChange}
-                />
-                <textarea
-                    placeholder="Description of the Todo"
-                    value={this.state.description}
-                    onChange={this.onDescriptionChange}
-                >
-                </textarea>
-                <input 
-                    type="number"
-                    placeholder="Priority"
-                    value={this.state.priority}
-                    onChange={this.onPriorityChange}
-                />
-                <button>Add Todo</button>
+                <form onSubmit={this.onSubmit}>
+                    <input 
+                        type="text"
+                        placeholder="Title"
+                        autoFocus
+                        value={this.state.title}
+                        onChange={this.onTitleChange}
+                    />
+                    <textarea
+                        placeholder="Description of the Todo"
+                        value={this.state.description}
+                        onChange={this.onDescriptionChange}
+                    >
+                    </textarea>
+                    <input 
+                        type="number"
+                        placeholder="Priority"
+                        value={this.state.priority}
+                        onChange={this.onPriorityChange}
+                    />
+                    <button>Add Todo</button>
+                </form>
             </div>
         )
     }
