@@ -8,9 +8,9 @@ export default class TodoForm extends React.Component {
         this.onPriorityChange = this.onPriorityChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this); 
         this.state = {
-            title: '',
-            description: '',
-            priority: 5,
+            title: props.todo ? props.todo.title : '',
+            description: props.todo ? props.todo.description : '',
+            priority: props.todo ? props.todo.priority : 5,
             errorMessage: ''
         };
     };
@@ -70,7 +70,7 @@ export default class TodoForm extends React.Component {
                         value={this.state.priority}
                         onChange={this.onPriorityChange}
                     />
-                    <button>Add Todo</button>
+                    <button>{ this.props.todo ? 'Update Todo' : 'Add Todo'}</button>
                 </form>
             </div>
         )

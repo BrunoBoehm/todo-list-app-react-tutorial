@@ -1530,7 +1530,7 @@ const mapStateToProps = (state) => {
 export default  connect(mapStateToProps)(TodoListFilters);
 ```
 
-### Creating the add/edit form
+### Creating the add form
 Let's create a new componenent `TodoForm.js`.
 
 We need to create a class based component because we will need to use state. Let's create some dumy starting point data:
@@ -1809,3 +1809,211 @@ const AddTodoPage = (props) => (
 export default connect()(AddTodoPage);
 ```
 
+### Creating the edit form
+We first need to link to the "edit todo" page.
+```js
+import React from 'react';
+import { removeTodo } from '../actions/todos';
+import { Link } from 'react-router-dom'; 
+import { connect } from 'react-redux';
+
+const TodoListItem = ( {title, description, priority, createdAt, id, dispatch} ) => (
+    <div>
+        <Link to={`/edit/${id}`}><h3>[{priority}] {title}</h3></Link>
+        <p>{description}</p>
+        <p>{createdAt}</p>
+        <button onClick={() => {
+            dispatch(removeTodo( { id } ));
+        }}>Remove</button>
+    </div>
+);
+
+export default connect()(TodoListItem);
+```
+
+Let's make sure we have have the right routes set up with params `<Route path="/edit/:id" component={EditTodoPage} />`
+```js
+import React from 'react';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import HomePage from '../pages/HomePage';
+import ContactPage from '../pages/ContactPage';
+import NotFoundPage from '../pages/NotFoundPage';
+import AddTodoPage from '../pages/AddTodoPage';
+import EditTodoPage from '../pages/EditTodoPage';
+import Header from '../components/Header';
+
+const AppRouter = () => (
+    <BrowserRouter>
+        <div>
+            <Header />
+            <Switch>
+                <Route path="/" component={HomePage} exact={true} />
+                <Route path="/contact" component={ContactPage} />
+                <Route path="/add-todo" component={AddTodoPage} />
+                <Route path="/edit/:id" component={EditTodoPage} />
+                <Route component={NotFoundPage} />
+            </Switch>
+        </div>
+    </BrowserRouter>
+);
+
+export default AppRouter;
+```
+
+Thanks to react router we get special props inside of our Edit page: `props.match.params`.
+```js
+import React from 'react';
+import TodoForm from '../components/TodoForm';
+
+const EditTodoPage = (props) => (
+    <div>
+        <h3>Editing Todo</h3>
+        <p>ID: {props.match.params.id}</p>
+        <TodoForm />
+    </div>
+)
+
+export default EditTodoPage;
+```
+
+We now need to import the complete Todo object matching the id from the params.
+We will use connect, and map state to props with the relevant Todo object.
+```js
+import React from 'react';
+import TodoForm from '../components/TodoForm';
+import { connect } from 'react-redux';
+
+const EditTodoPage = (props) => (
+    <div>
+        <h3>Editing Todo</h3>
+        <p>ID: {props.match.params.id}</p>
+        <TodoForm 
+            todo={props.todo}
+            onSubmit={(todo) => {
+                console.log('updated', todo)
+            }}
+        />
+    </div>
+)
+
+const mapStateToProps = (state, props) => {
+    return {
+        todo: state.todos.find((todo) => todo.id === props.match.params.id)
+    }
+}
+
+export default connect(mapStateToProps)(EditTodoPage);
+```
+We use `find` to search into the application's `state.todos` the todo with the id that matches the one from the params.
+
+We now need to change the TodoForm to initialize with values from the props if they exist, or empty values if not.
+```js
+import React from 'react';
+
+export default class TodoForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.onTitleChange = this.onTitleChange.bind(this);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onPriorityChange = this.onPriorityChange.bind(this);
+        this.onSubmit = this.onSubmit.bind(this); 
+        this.state = {
+            title: props.todo ? props.todo.title : '',
+            description: props.todo ? props.todo.description : '',
+            priority: props.todo ? props.todo.priority : 5,
+            errorMessage: ''
+        };
+    };
+
+    onTitleChange(e) {
+        const title = e.target.value;
+        this.setState(() => ({title}));
+    }
+
+    onDescriptionChange(e) {
+        const description = e.target.value;
+        this.setState(() => ({description}));
+    };
+
+    onPriorityChange(e) {
+        const priority = e.target.value;
+        if (!priority || priority.match(/^([1-9]|10)$/)) {
+            this.setState(() => ({priority}));
+        }
+    }
+
+    onSubmit(e) {
+        e.preventDefault();
+        
+        if ( !this.state.title ) {
+            this.setState(() => ({errorMessage: 'Please provide a title'}));
+        } else {
+            this.setState(() => ({errorMessage: ''}));
+            this.props.onSubmit({
+                title: this.state.title,
+                description: this.state.description,
+                priority: this.state.priority 
+            });
+        }
+    }
+
+    render() {
+        return (
+            <div>
+                <form onSubmit={this.onSubmit}>
+                    <input 
+                        type="text"
+                        placeholder="Title"
+                        autoFocus
+                        value={this.state.title}
+                        onChange={this.onTitleChange}
+                    />
+                    <textarea
+                        placeholder="Description of the Todo"
+                        value={this.state.description}
+                        onChange={this.onDescriptionChange}
+                    >
+                    </textarea>
+                    <input 
+                        type="number"
+                        placeholder="Priority"
+                        value={this.state.priority}
+                        onChange={this.onPriorityChange}
+                    />
+                    <button>{ this.props.todo ? 'Update Todo' : 'Add Todo'}</button>
+                </form>
+            </div>
+        )
+    }
+}
+```
+
+The one last thing we need to do is to dispatch our updated values thanks to the `editTodo` action generator.
+```js
+import React from 'react';
+import TodoForm from '../components/TodoForm';
+import { connect } from 'react-redux';
+import { editTodo } from '../actions/todos';
+
+const EditTodoPage = (props) => (
+    <div>
+        <h3>Editing Todo</h3>
+        <p>ID: {props.match.params.id}</p>
+        <TodoForm 
+            todo={props.todo}
+            onSubmit={(todo) => {
+                props.dispatch(editTodo(props.todo.id, todo));
+                props.history.push('/');
+            }}
+        />
+    </div>
+)
+
+const mapStateToProps = (state, props) => {
+    return {
+        todo: state.todos.find((todo) => todo.id === props.match.params.id)
+    }
+}
+
+export default connect(mapStateToProps)(EditTodoPage);
+```

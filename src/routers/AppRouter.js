@@ -4,7 +4,7 @@ import HomePage from '../pages/HomePage';
 import ContactPage from '../pages/ContactPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import AddTodoPage from '../pages/AddTodoPage';
-import { editTodo } from '../actions/todos';
+import EditTodoPage from '../pages/EditTodoPage';
 import Header from '../components/Header';
 
 const AppRouter = () => (
@@ -15,7 +15,7 @@ const AppRouter = () => (
                 <Route path="/" component={HomePage} exact={true} />
                 <Route path="/contact" component={ContactPage} />
                 <Route path="/add-todo" component={AddTodoPage} />
-                <Route path="/edit-todo" component={editTodo} />
+                <Route path="/edit/:id" component={EditTodoPage} />
                 <Route component={NotFoundPage} />
             </Switch>
         </div>
