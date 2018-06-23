@@ -2017,3 +2017,415 @@ const mapStateToProps = (state, props) => {
 
 export default connect(mapStateToProps)(EditTodoPage);
 ```
+
+
+# Firebase
+
+[firebase.google.com](firebase.google.com) sign in and get to the console, add a new project.
+We use it for the real time database and the authentication solution. It is a NoSQL database.
+
+At first the rules don't let anyone not authenticated to read or write:
+```json
+{
+    ".rules": "auth != null",
+    ".write": "auth != null"
+}
+```
+We can for the moment (not to take care of authentication), set them to `true` and publish (and get a warning).
+```json
+{
+    ".rules": true,
+    ".write": true
+}
+```
+
+Installing Firebase can be done with a script tag, but we are going to use the npm library instead, and enter our credentials (later we'll use environment variables): `yarn add firebase`.
+
+We can create a new folder `/firebase` and file `firebase.js`, it will make it available to other files by import.
+
+```js
+import * as firebase from 'firebase';
+
+const config = {
+    apiKey: "...",
+    authDomain: "...",
+    databaseURL: "...",
+    projectID: "...",
+    storageBucket: "...",
+    messagingSenderID: "..".
+};
+
+firebase.initializeApp(config);
+
+const database = firebase.database();
+
+// just for testing config, let's write at the root
+// we can import './firebase/firebase'; from app.js and run "yarn run dev-server" from the terminal
+database.ref().set({
+    name: "Bruno",
+    age: 29,
+    isSingle: false,
+    location: {
+        city: "Lausanne",
+        country: "Switzerland"
+    }
+});
+```
+
+The `* as firebase` takes all named export and dumps them in an export variable called `firebase` (it's not setup to export just one variable).
+We can paste the variable as a `const config` (no change of config).
+We now have a valid connection.
+
+`.ref()` is short for reference inside of the database (like the table/collection we're in). We'll be able to pass things in, otherwise we reference the root of the database.
+`.set()` can take a string, boolean... or an object, and will completely clear what was previously (it overrides). To update we should `.ref()` the specific part of the DB we want to update: `database.ref('age').set(18);`, or `database.ref('location/city').set(18);` for a nested value. Note it is asynchronous. The request as to be processed etc. So we'll have to use *promises*.
+
+## Promises with Firebase
+Refresher on promises
+
+```js
+// create a promise
+const promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+        // resolve({
+        //     name: "Bruno",
+        //     age: 29
+        // });
+        reject('Something went wrong');
+    }, 5000)
+});
+
+console.log('before');
+
+promise.then((data) => {
+    console.log("1", data);
+}).catch((error) => {
+    console.log("error: ", error)
+});
+
+console.log('after');
+```
+
+`.set()` returns a promise, so we can chain on it using `.then()` and `.catch()`. In case of success nothing comes back.
+```js
+database.ref().set({
+    name: "Bruno",
+    age: 29,
+    isSingle: false,
+    location: {
+        city: "Lausanne",
+        country: "Switzerland"
+    }
+}).then(() => {
+    console.log('Data was saved')
+}).catch((error) => {
+    console.log('Could not be saved', error)
+});
+```
+Asynchronous programming is important otherwise we'd block the browser.
+
+## Removing Data 
+We can use `.remove()` or `.set(null)`
+```js
+database.ref(isSingle).remove()
+    .then(() => {
+        console.log("yeah");
+    }).catch((e) => {
+        console.log('error', e);
+    });
+
+// or using null
+database.ref(isSingle).set(null);    
+```
+
+## Updating data
+We could use `.ref().set()`or by using `.update()` with an object. We can create a new attribute or delete (null) and even update a nested attribute.
+```js
+database.ref().update({
+    name: "Michael",
+    age: 18,
+    job: "software engineer",
+    isSingle: null,
+    "location/city": "Boston"
+})
+```
+
+## Fetching data
+We can fetch (single) or subscribe (live).
+```js
+database.ref().once('value')
+    .then((snapshot) => {
+        const val = snapshot.val();
+        console.log(val);
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+
+// or
+
+database.ref('location/city').once('value')
+    .then((snapshot) => {
+        const val = snapshot.val();
+        console.log(val);
+    })
+    .catch((error) => {
+        console.log(error);
+    });   
+```
+
+To have the server notify us when there is a change we can use `.on()`. The function will re-run if the data change on the DB. We can cancel subscription using `.off()`
+```js
+database.ref().on('value', (snapshot) => {
+    console.log(snapshot.val());
+})
+
+// we can force it to update to test it
+setTimeout(() => {
+    database.ref('age').set(55);
+}, 3500);
+
+// to cancel
+setTimeout(() => {
+    database.ref('age').off();
+}, 3500);
+```
+
+We can also use the on function as an argument we unsubscribing.
+```js
+// we just store it in a const
+const onValueChange = database.ref().on('value', (snapshot) => {
+    console.log(snapshot.val());
+})
+
+// and unsubscribe
+setTimeout(() => {
+    database.ref('age').off(onValueChange);
+}, 3500);
+```
+
+And lastly we can use a third argument to be notified of any error during data fetching.
+```js
+database.ref().on('value', (snapshot) => {
+    console.log(snapshot.val());
+}, (err) => {
+    console.log('Error during data fetching', err);
+});
+```
+
+## Array data in firebase
+### .push()
+To store list based data (like a collection of documents) Firebase doesn't store arrays.
+```js
+...
+
+const notes = [
+    {
+        id: "1",
+        note: "first note"
+    },
+    {
+        id: "2",
+        note: "second note"
+    }    
+];
+
+database.ref('notes').set(notes);
+// we won't get an error, but it has been converted as an object structure.
+```
+We would like something like `.set("notes/12")` but instead it creates an object structure where the indexes are 0, 1, 2 and not the ids.
+
+We need to switch to an object architecture like:
+```js
+const firebaseNotes = {
+    notes: {
+        ycjhzdkczd: {
+            note: "first note"
+        },
+        zdchbjkbdk: {
+            note: "second note"
+        }          
+    }
+}
+```
+To generate the random IDs we'll use `.push()` that creates an ID 
+```js
+database.ref('notes').push({
+    note: 'first note'
+})
+
+database.ref('notes').push({
+    note: 'second note'
+})
+```
+
+We can update any note using `database.ref('notes/izhdbcijzbdjonz').update(...)`.
+
+### Fetching arrays
+Instead of getting an array back we get an object with the same structure around the ID of each sub-object.
+```js
+database.ref('expenses')
+    .once('value')
+    .then((snapshot) => {
+        console.log(snapshot.val());
+    });
+```
+
+On the `dataSnapshot` we can use `forEach()` to get a child snapshot and `.key()`
+```js
+database.ref('expenses')
+    .once('value')
+    .then((snapshot) => {
+        const expenses = [];
+
+        snapshot.forEach((childSnapshot) => {
+            expenses.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            })
+        });
+
+        console.log(expenses);
+    });
+```
+
+We could also imagine creating a subscriber on the child_removed event
+```js
+database.ref('expenses').on('child_removed', (snapshot) => {
+    console.log(snapshot.key, snapshot.val());
+});
+```
+
+Or `child_changed`, `child_added`...
+```js
+database.ref('expenses').on('child_changed', (snapshot) => {
+    console.log(snapshot.key, snapshot.val());
+});
+```
+
+## Connecting Firebase with react
+We use an Async redux action to dispatch action to the reduc store that change the store and also change firebase
+
+### Asynchronous redux actions
+#### Setup
+When someone creates a form, we dispach a redux action but if we refresh the page we lose it. First we'll send it to the databse, and then add it to the store.
+
+We could integrate our call to firebase in the component, inside of the `onSubmit` handler, but we don't want the component to be communicating with firebase. The component should be unaware of where the data is coming from, it should to user interaction and presentation: we'll abstract it!
+
+We'll change the action inside of the action folder inside of the `src/actions/expenses.js`. Let's recap
+1. The component calls an action generator
+2. The action generator returns an object
+3. The component dispatches the object
+4. The redux store runs the reducer and changes
+
+Now we'll do...
+1. The component calls an action generator
+2. The action generator returns a function
+3. The component dispatches the function (by default redux doesn't dispatch function , we'll add middleware)
+4. Function runs and dispatchs other actions (that's where we'll use firebase.push and where we'll manipulate the redux store)
+
+We'll use `redux-thunk` that adds support for dispatching functions.
+We will install it `yarn add redux-thunk`
+
+And make a change to `store/configureStore.js` file.
+```js
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import expenseReducer from '../reducers/expenses';
+import filtersReducer from '../reducers/filters';
+import thunk from 'redux-thunk';
+
+export default () => {
+    const store = createStore(
+        combineReducers({
+            expenses: expensesReducer,
+            filters: filtersReducer
+        }),
+        applyMiddleware(thunk)
+        // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+    );
+
+    return store;
+}
+
+// or to preserve the chrome devtools functionality
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+export default () => {
+    const store = createStore(
+        combineReducers({
+            expenses: expensesReducer,
+            filters: filtersReducer
+        }),
+        composeEnhancers( applyMiddleware(thunk) )
+    );
+
+    return store;
+}
+```
+
+Also we need to wire up our firebase database to the rest of the application, by exporting
+```js
+// at the end of firebase.js
+export { firebase, database as default };
+```
+
+#### Create
+Let's make our first async action, and modify our `src/actions/expenses.js` file. `startAddExpense` will start the process : save to the firebase DB and on success dispatch the action and change the store. It returns a funtion instead of an object.
+```js
+import database from 'firebase';
+...
+// ADD_EXPENSE
+export const addExpense = (expense) => ({
+    type: 'ADD_EXPENSE',
+    expense                 // expense: expense
+});
+
+export const startAddExpense = (expenseData = {}) => {
+    return (dispatch) => {
+        const {             // setting up defaults
+            description = '',
+            note = '',
+            amount = 0,
+            createdAt = 0
+        } = expenseData;    // destructuring from expenseData
+
+        const expense = { description, note, amount, createdAt };
+
+        database.ref('expenses').push(expense)          // save to the DB
+            .then(() => {                               // change the store
+                dispatch( addExpense() )
+            })
+    }
+}
+```
+
+Let's also make sure that we change references to `addExpense` into `startAddExpense` inside of our components.
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import ExpenseForm from './ExpenseForm';
+import { startAddExpense } from '../actions/expenses';
+
+export class AddExpensePage extends React.Component {
+    onSubmit = (expense) => {
+        this.props.startAddExpense(expense);
+        this.props.history.push('/');
+    };
+
+    render() {
+        return (
+            <div>
+                <h1>Add Expense</h1>
+                <ExpenseForm
+                    onSubmit={this.onSubmit}
+                />
+            </div>        
+        );
+    };
+}
+
+const matchDispatchToProps = (dispatch) => ({
+    startAddExpense: (expense) => dispatch( startAddExpense(expense) )
+});
+
+export default connect(undefined, matchDispatchToProps)(AddExpensePage);
+```
